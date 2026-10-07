@@ -1,0 +1,4 @@
+int adcout = analogRead();
+vdin = adout * 3.3 / 4096;
+
+o nome da porta que nos importa é o GP0 etc
