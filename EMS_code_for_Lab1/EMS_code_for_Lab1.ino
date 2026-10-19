@@ -2,14 +2,12 @@
   EMS - Electronics for Micro-Systems
   Laboratory 1: Resistive Sensor Interface and Actuation
   Raspberry Pi Pico 2 W - Arduino IDE template
-
   Main work left for the students:
     1) Convert ADC code -> voltage (check ADC assumptions)
     2) Derive and implement V_AFE -> R_NTC for THEIR AFE
     3) Implement the Beta-model conversion R_NTC -> temperature
     4) Select relay hysteresis thresholds
     5) Optional: add the soil-moisture channel
-
   The acquisition loop, serial protocol and relay state machine are provided.
 */
 #include <Arduino.h>
@@ -37,9 +35,13 @@ constexpr float NTC_R0 = 10000.0f;        // ohm
 constexpr float NTC_T0_K = 25.0f + 273.15f;
 constexpr float NTC_BETA = 3380.0f;       // TODO: replace using the datasheet
 constexpr float AFE_GAIN = 4.265f;
-const float Vdd = 3.3f;
-const float R1 = 10000.0f;
-const float Tmax = 50.0f;
+constexpr float VDD = 3.3f;
+constexpr float R1 = 10000.0f;
+constexpr float R2 = 5600.0f;
+constexpr float RA = 4700.0f;
+constexpr float RB = 2700.0f;
+constexpr float Tmax = 50.0f;
+
 
 // -----------------------------------------------------------------------------
 // Relay control
@@ -82,7 +84,7 @@ float adcCodeToVoltage(uint16_t VinBit)
     Start from the ADC model discussed in class and check the assumptions used
     by ADC_VREF and ADC_MAX_CODE above.
   */
-   return (VinBit * ADC_VREF) / ADC_MAX_CODE;
+   return ((float) VinBit * ADC_VREF) / ADC_MAX_CODE;
 }
 
 float afeVoltageToNtcResistance(float vAfe)
@@ -103,17 +105,17 @@ float afeVoltageToNtcResistance(float vAfe)
       - the equation must match the circuit actually built.
   */
   // 1. Rejeitar valores impossíveis ou divisão por zero logo no início
-  if (vAfe <= 0.0f || vAfe >= Vdd || !isfinite(vAfe)) {
+  if (vAfe <= 0.0f || vAfe >= VDD || !isfinite(vAfe)) {
       return NAN;
   }
+  float paralelo_RA_RB = (RA * RB)/(RA + RB);
+  float Vntc = (vAfe + VDD*(R2/RA))/( 1 + (R2/paralelo_RA_RB));
 
-  float vDivisor = vAfe / AFE_GAIN;
-
-  if (vDivisor <= 0.0f || vDivisor >= Vdd) {
+  if (Vntc <= 0.0f || Vntc >= VDD) {
       return NAN;
   }
-
-  return (R1 * vDivisor) / (Vdd - vDivisor);
+  
+  return (R1 * Vntc) / (VDD - Vntc);
 }
 
 /*------------------------------------------------------------------------------------------*/
@@ -129,7 +131,7 @@ float ntcResistanceToTemperatureC(float rNtc)
       return NAN;
   }
   float T = 0;
-  T = 1 /(1/NTC_T0_K + (1/NTC_BETA)*log(rNtc/NTC_R0));
+  T = 1 /((1/NTC_T0_K) + (1/NTC_BETA)*log(rNtc/NTC_R0));
   return Kelvin_to_Celsius(T);
 }
 
