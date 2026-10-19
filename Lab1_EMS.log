@@ -1,0 +1,15 @@
+LTspice 24.1.10 for Windows
+Circuit: C:\Users\diogo\Desktop\EMS_Pratica\NtcSensor\Lab1_EMS.net
+Start Time: Wed Oct 14 11:28:13 2026
+solver = Normal
+Maximum thread count: 8
+tnom = 27
+temp = 25
+method = modified trap
+Direct Newton iteration for .op point succeeded.
+Total elapsed time: 2.211 seconds.
+
+Files loaded:
+C:\Users\diogo\Desktop\EMS_Pratica\NtcSensor\Lab1_EMS.net
+C:\Users\diogo\AppData\Local\LTspice\lib\sub\UniversalOpAmp2.lib
+
