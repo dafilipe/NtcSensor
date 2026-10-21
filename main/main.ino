@@ -153,6 +153,38 @@ void updateRelay(float temperatureC)
 }
 
 
+// -----------------------------------------------------------------------------
+// Soil moisture - circular buffer
+// -----------------------------------------------------------------------------
+constexpr uint8_t SOIL_BUFFER_SIZE = 4;
+
+uint16_t soilBuffer[SOIL_BUFFER_SIZE] = {0};
+uint8_t soilBufferIndex = 0;
+uint8_t soilBufferCount = 0;
+
+uint16_t readSoilAverage(uint16_t newSample)
+{
+    // Guardar a nova amostra
+    soilBuffer[soilBufferIndex] = newSample;
+
+    // Avançar para a próxima posição circular
+    soilBufferIndex =
+        (soilBufferIndex + 1) % SOIL_BUFFER_SIZE;
+
+    // Contar amostras até o buffer ficar cheio
+    if (soilBufferCount < SOIL_BUFFER_SIZE) {
+        soilBufferCount++;
+    }
+
+    // Calcular a média das amostras disponíveis
+    uint32_t sum = 0;
+
+    for (uint8_t i = 0; i < soilBufferCount; i++) {
+        sum += soilBuffer[i];
+    }
+
+    return (uint16_t)(sum / soilBufferCount);
+}
 
 float calculateSoilPercent(uint16_t adcCode){
   constexpr float SOIL_DRY_ADC = 4095;
@@ -231,13 +263,21 @@ void loop()
   updateRelay(tempC);
 
   // Optional soil-moisture channel
-  int soilAdc = -1;
-  float soilPct = NAN;
+int soilAdc = -1;
+float soilPct = NAN;
 
-  if (ENABLE_SOIL) {
-    soilAdc = analogRead(PIN_SOIL_ADC);
-    soilPct = calculateSoilPercent((uint16_t)soilAdc);
-  }
+if (ENABLE_SOIL) {
+    // Ler o ADC do sensor
+    uint16_t soilRaw = analogRead(PIN_SOIL_ADC);
+
+    // Filtrar a leitura com a média móvel
+    soilAdc = readSoilAverage(soilRaw);
+
+    // Converter a média para percentagem
+    soilPct = calculateSoilPercent(
+        (uint16_t)soilAdc
+    );
+}
 
   sendData(now, adcNtc, vNtc, rNtc, tempC, soilAdc, soilPct);
 }
