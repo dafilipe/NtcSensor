@@ -165,20 +165,6 @@ float calculateSoilPercent(uint16_t adcCode)
     if (soilPct < 0.0f) {
         soilPct = 0.0f;
     }
-
-
-  Serial.print(",");
-  Serial.print(vNtc, 4);
-  Serial.print(",");
-  Serial.print(rNtc, 1);
-  Serial.print(",");
-  Serial.print(tempC, 2);
-  Serial.print(",");
-  Serial.print(relayState ? 1 : 0);
-  Serial.print(",");
-  Serial.print(soilAdc);
-  Serial.print(",");
-  Serial.println(soilPct, 1);
 }
 // -----------------------------------------------------------------------------
 // Setup / loop
