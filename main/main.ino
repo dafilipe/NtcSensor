@@ -56,7 +56,7 @@ bool relayState = false;
 // -----------------------------------------------------------------------------
 // Optional soil-moisture extension
 // -----------------------------------------------------------------------------
-constexpr bool ENABLE_SOIL = false;
+constexpr bool ENABLE_SOIL = true;
 
 // -----------------------------------------------------------------------------
 // Some helpful functions
@@ -152,10 +152,9 @@ void updateRelay(float temperatureC)
   }
 }
 
-float calculateSoilPercent(uint16_t adcCode)
-{
-    constexpr float SOIL_DRY_ADC = 4095;
-    constexpr float SOIL_WET_ADC = 945;
+float calculateSoilPercent(uint16_t adcCode){
+  constexpr float SOIL_DRY_ADC = 4095;
+  constexpr float SOIL_WET_ADC = 878;
 
     float soilPct =
         100.0f *
@@ -165,6 +164,31 @@ float calculateSoilPercent(uint16_t adcCode)
     if (soilPct < 0.0f) {
         soilPct = 0.0f;
     }
+    if(soilPct > 100.0f){
+      soilPct = 100.0f;
+    }
+
+  return soilPct;
+}
+
+void sendData(uint32_t timeMs, uint16_t adcNtc, float vNtc, float rNtc,float tempC,int soilAdc,float soilPct)
+{
+  Serial.print("DATA,");
+  Serial.print(timeMs);
+  Serial.print(",");
+  Serial.print(adcNtc);
+  Serial.print(",");
+  Serial.print(vNtc, 4);
+  Serial.print(",");
+  Serial.print(rNtc, 1);
+  Serial.print(",");
+  Serial.print(tempC, 2);
+  Serial.print(",");
+  Serial.print(relayState ? 1 : 0);
+  Serial.print(",");
+  Serial.print(soilAdc);
+  Serial.print(",");
+  Serial.println(soilPct, 1);
 }
 // -----------------------------------------------------------------------------
 // Setup / loop
