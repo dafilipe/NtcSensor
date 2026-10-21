@@ -154,23 +154,22 @@ void updateRelay(float temperatureC)
 
 
 
-float calculateSoilPercent(uint16_t adcCode, int PIN_SOIL_ADC)
-{
-  constexpr float SOIL_DRY_ADC = 4095.0f;
-  constexpr float SOIL_WET_ADC = 878.0f;
-  int sum = 0;
-  int i =0;
+float calculateSoilPercent(uint16_t adcCode){
+  constexpr float SOIL_DRY_ADC = 4095;
+  constexpr float SOIL_WET_ADC = 878;
 
-  for (i = 0; i<=100; i++){
-    sum = sum + analogRead(PIN_SOIL_ADC);
-  }
+    float soilPct =
+        100.0f *
+        (SOIL_DRY_ADC - (float)adcCode) /
+        (SOIL_DRY_ADC - SOIL_WET_ADC);
 
-  sum / 100;
-  
-  float soilPct = 100.0f * (SOIL_WET_ADC - sum) / (SOIL_WET_ADC - SOIL_DRY_ADC);
+    if (soilPct < 0.0f) {
+        soilPct = 0.0f;
+    }
+    if(soilPct > 100.0f){
+      soilPct = 100.0f;
+    }
 
-  if (soilPct < 0.0f)   soilPct = 0.0f;
-  if (soilPct > 100.0f) soilPct = 100.0f;
   return soilPct;
 }
 
@@ -236,7 +235,7 @@ void loop()
   float soilPct = NAN;
 
   if (ENABLE_SOIL) {
-    //soilAdc = analogRead(PIN_SOIL_ADC);
+    soilAdc = analogRead(PIN_SOIL_ADC);
     soilPct = calculateSoilPercent((uint16_t)soilAdc);
   }
 
