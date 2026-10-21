@@ -152,21 +152,28 @@ void updateRelay(float temperatureC)
   }
 }
 
-float calculateSoilPercent(uint16_t adcCode){
-  constexpr float SOIL_DRY_ADC = 4095;
-  constexpr float SOIL_WET_ADC = 878;
+constexpr uint16_t SOIL_N_SAMPLES = 100;
 
-    float soilPct =
-        100.0f *
-        (SOIL_DRY_ADC - (float)adcCode) /
-        (SOIL_DRY_ADC - SOIL_WET_ADC);
+// Lê 100 amostras e devolve a média do código ADC
+uint16_t readSoilAverage(uint8_t pin)
+{
+  uint32_t sum = 0;
+  for (uint16_t i = 0; i < SOIL_N_SAMPLES; i++) {
+    sum += analogRead(pin);
+    delay(1);               
+  }
+  return sum / SOIL_N_SAMPLES;
+}
 
-    if (soilPct < 0.0f) {
-        soilPct = 0.0f;
-    }
-    if(soilPct > 100.0f){
-      soilPct = 100.0f;
-    }
+float calculateSoilPercent(uint16_t adcCode)
+{
+  constexpr float SOIL_DRY_ADC = 4095.0f;
+  constexpr float SOIL_WET_ADC = 878.0f;
+
+  float soilPct = 100.0f * (SOIL_WET_ADC - (float)adcCode) / (SOIL_WET_ADC - SOIL_DRY_ADC);
+
+  if (soilPct < 0.0f)   soilPct = 0.0f;
+  if (soilPct > 100.0f) soilPct = 100.0f;
 
   return soilPct;
 }
